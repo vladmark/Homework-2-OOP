@@ -32,7 +32,12 @@
 			<Add option="-Wall" />
 			<Add option="-fexceptions" />
 		</Compiler>
+		<Unit filename="abc.h" />
+		<Unit filename="arbore.h" />
+		<Unit filename="avl.h" />
 		<Unit filename="main.cpp" />
+		<Unit filename="nod.h" />
+		<Unit filename="nod_avl.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

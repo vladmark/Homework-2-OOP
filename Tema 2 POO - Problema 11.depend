@@ -1,0 +1,83 @@
+# depslib dependency file v1.0
+1554800252 source:g:\tema 2 - 11\tema 2 - problema 11\tema2_poo\main.cpp
+	<iostream>
+	<fstream>
+	<math.h>
+	"nod.h"
+	"nod_avl.h"
+	"arbore.h"
+	"abc.h"
+	"avl.h"
+
+1554801244 g:\tema 2 - 11\tema 2 - problema 11\tema2_poo\nod.h
+	<iostream>
+	<fstream>
+	<math.h>
+
+1554798136 g:\tema 2 - 11\tema 2 - problema 11\tema2_poo\nod_avl.h
+	<iostream>
+	<fstream>
+	<math.h>
+	"nod.h"
+
+1554800040 g:\tema 2 - 11\tema 2 - problema 11\tema2_poo\arbore.h
+	<iostream>
+	<fstream>
+	<math.h>
+
+1554799986 g:\tema 2 - 11\tema 2 - problema 11\tema2_poo\abc.h
+	<iostream>
+	<fstream>
+	<math.h>
+	"arbore.h"
+	"nod.h"
+
+1554800086 g:\tema 2 - 11\tema 2 - problema 11\tema2_poo\avl.h
+	"nod_avl.h"
+	<iostream>
+	<fstream>
+	<math.h>
+	"arbore.h"
+	"nod_avl.h"
+
+1554842194 source:l:\tema 2 - 11\tema 2 - problema 11\tema2_poo\main.cpp
+	<iostream>
+	<fstream>
+	<math.h>
+	"nod.h"
+	"nod_avl.h"
+	"arbore.h"
+	"abc.h"
+	"avl.h"
+
+1554842704 l:\tema 2 - 11\tema 2 - problema 11\tema2_poo\nod.h
+	<iostream>
+	<fstream>
+	<math.h>
+
+1554798136 l:\tema 2 - 11\tema 2 - problema 11\tema2_poo\nod_avl.h
+	<iostream>
+	<fstream>
+	<math.h>
+	"nod.h"
+
+1554842080 l:\tema 2 - 11\tema 2 - problema 11\tema2_poo\arbore.h
+	<iostream>
+	<fstream>
+	<math.h>
+
+1554842552 l:\tema 2 - 11\tema 2 - problema 11\tema2_poo\abc.h
+	<iostream>
+	<fstream>
+	<math.h>
+	"arbore.h"
+	"nod.h"
+
+1554840050 l:\tema 2 - 11\tema 2 - problema 11\tema2_poo\avl.h
+	"nod_avl.h"
+	<iostream>
+	<fstream>
+	<math.h>
+	"arbore.h"
+	"nod_avl.h"
+

@@ -1,210 +1,74 @@
+#pragma once
 #include <iostream>
 #include <fstream>
 #include <math.h>
+
+#include "nod.h"
+#include "nod_avl.h"
+#include "arbore.h"
+#include "abc.h"
+#include "avl.h"
 using namespace std;
 
-//NOF.H
-template <class data> class nod_avl;
-template <class data, class nodt  >
-class arbore;
-template <class data> class abc;
-template <class data> class avl;
-template <class data> void echilibreaza (nod_avl<data>** root);
-template <class data> void rotatie_stanga (nod_avl<data>** root);
-template <class data> void rotatie_dreapta (nod_avl<data>** root);
-template <class data> void rotatie_dreapta_stanga (nod_avl<data>** root);
-template <class data> void rotatie_stanga_dreapta (nod_avl<data>** root);
-
-template <typename data>
-class nod
-{
-    data info;
-    nod* st;
-    nod* dr;
-public:
-    nod() {st=dr=nullptr;}
-    nod(data inf) {info=inf; st=dr=nullptr;};
-    nod(const nod& n) {
-        info=n.info;
-        st=dr=nullptr;
-        if(n.st){
-            st=new nod(*(n.st));
+template <class data> void stergere_inlocuire_nod (nod<data>** root) {
+    //se presupune ca radacina are macar subarbore stang sau drept: de cazul in care e frunza ma ocup in functia mai mare care o apeleaza pe asta
+    /*plan:
+    Caz 1. subarborele drept exista si primul lui nod are subarbore stang
+    1- gasesc cea mai mica frunza mai mare decat root (cauta_frunza_min) si returnez pointer la TATAL ei
+    2- schimb valoarea radacinii cu valoarea frunzei gasite si las radacina in pace (n-am nevoie de mai mult)
+    3- creez un nod pointer aux si copiez in el (cu noi alocari) tot subarborele drept al frunzei celei mai mici (constructorul de copiere al nod copiaza recursiv)
+    4- sterg subarborele stang al TATALUI frunzei celei mai mici
+    5- pun TATA->st=aux;
+    Caz 2. subarborele drept exista si primul lui nod nu are subarbore stang
+    1- copiez (aloc) recursiv un nou nod pointer aux care incepe cu primul nod al subarborelui drept
+    2- copiez in nodul stang al lui aux nodul stang al radacinii
+    3- delete root
+    4- root=aux (ca pointer)
+    Caz 3. radacina nu are subarbore drept:
+    1- copiez (aloc) recursiv un nou nod pointer aux care incepe cu primul nod al subarborelui stang
+    2- delete root
+    3- root=aux
+    */
+    if ((*root)->dr) {
+        if ((*root)->dr->st) { //Caz 1
+            //1
+            nod<data>* nmin_tata=((*root)->dr)->cauta_frunza_min();
+            //2
+            (*root)->info=(nmin_tata->st)->info;
+            //3
+            nod<data>* aux;
+            if ((nmin_tata->st)->dr) aux=new nod<data>(*( (nmin_tata->st)->dr));
+            else aux=nullptr;
+            //4
+            delete nmin_tata->st;
+            //5
+            nmin_tata->st=aux; //e suficient pentru ca aux a fost alocat deja recursiv
         }
-        if(n.dr){
-            dr=new nod(*(n.dr));
+        else { //Caz 2
+            //1
+            nod<data>* aux;
+            aux=new nod<data>(*((*root)->dr));
+            //2
+            aux->st=new nod<data>(*((*root)->st));
+            //3
+            delete (*root);
+            //4
+            (*root)=aux;
         }
-     };
-    virtual ~nod(){
-        cout<<"Destructor nod."<<endl;
-        if(st) {
-            delete st;
-        }
-        if(dr) {
-            delete dr;
-        }
-        return;
+    } else { //Caz 3
+        //1
+        nod<data>* aux=new nod<data> (*((*root)->st));
+        delete (*root);
+        (*root)=aux;
     }
-    friend class arbore <data, nod<data> >;
-    friend class abc <data>;
-    friend class nod_avl <data>;
-    friend class avl <data>;
-    friend class arbore <data, nod_avl<data> >;
-    friend void avl<data>::avl_maker (nod_avl<data>** root, data inf);
-    virtual nod& operator=(const nod& n) {
-        if (this != &n) {
-            stergere_subarbore_rec();
-            copiere_rec(n);
-        }
-        return (*this);
-    };
-     data get() {return info;};
-     //void aloca_st (nod* n) {delete st; st=new nod; st->info=n->info; st->st=n->st; st->dr=n->dr;};
-     //void aloca_dr (nod* n) {delete dr; dr=new nod; dr->info=n->info; dr->st=n->st; dr->dr=n->dr;};
-     bool operator>(nod& n) {return info>n.info;};
-     bool operator<(nod& n) {return info<n.info;};
-     bool operator==(nod& n) {return info==n.info;};
-     virtual void stergere_subarbore_rec() {
-        //cout<<"Sunt in "<<info<<" si sterg recursiv."<<endl;
-        if (st) delete st;
-        if (dr) delete dr;
-        /*if(st) {
-            //cout<<"Sterg recursiv si o sa merg in stanga: "<<st->info<<endl;
-            st->stergere_subarbore_rec();
-            delete st;
-        }*/
-        /*if (dr) {
-            //cout<<"Sterg recursiv si o sa merg in dreapta: "<<dr->info<<endl;
-            dr->stergere_subarbore_rec();
-            delete dr;
-        }*/
-        return;
-     }
-     void copiere_rec (nod a) {
-        info=a.info;
-        st=dr=nullptr;
-        if(a.st){
-            st=new nod(*(a.st));
-            //st->copiere_rec();
-        }
-        if(a.dr){
-            dr=new nod(*(a.dr));
-            //dr->copiere_rec();
-        }
-        return;
-     }
-     virtual void afisare_rec (ostream& o) {
-        o<<info<<" ";
-        if (st) {
-            st->afisare_rec(o);
-        }
-        if (dr) {
-            dr->afisare_rec(o);
-        }
-        return;
-     }
-};
+    return;
+}
+
 
 template <class data> ostream& operator<<(ostream& o, nod<data>& n) {
     n.afisare_rec(o);
     return o;
 }
-
-
-template <typename data>
-class nod_avl:public nod<data> {
-    nod_avl* st;
-    nod_avl* dr;
-    int bal;
-    int h;
-public:
-    nod_avl():nod<data>() {bal=0; h=1;}
-    nod_avl(data inf):nod<data>(inf) {bal=0; h=1;}
-    nod_avl(const nod_avl<data>& n) {
-        bal=n.bal;
-        h=n.h;
-        nod<data>::info=n.info;
-        st=dr=nullptr;
-        if(n.st){
-            st=new nod_avl(*(n.st));
-        }
-        if(n.dr){
-            dr=new nod_avl(*(n.dr));
-        }
-    }
-    ~nod_avl() {
-        cout<<"Destructor nod_avl."<<endl;
-        if(st) {
-            delete st;
-        }
-        if(dr) {
-            delete dr;
-        }
-        return;
-    }
-    friend class arbore <data, nod_avl<data> >;
-    friend class avl <data>;
-    friend void avl<data>::avl_maker (nod_avl<data>** root, data inf);
-    friend void rotatie_stanga<data>(nod_avl<data>** root);
-    friend void rotatie_dreapta<data>(nod_avl<data>** root);
-    friend void rotatie_stanga_dreapta<data>(nod_avl<data>** root);
-    friend void rotatie_dreapta_stanga<data>(nod_avl<data>** root);
-    friend void echilibreaza<data>(nod_avl<data>** root);
-
-    int det_h() {
-        if (dr == nullptr && st==nullptr) return 1;
-        else if (dr == nullptr) return (st)->h+1;
-        else if (st == nullptr) return (dr)->h+1;
-        else return max ( st->h, dr->h ) + 1 ;
-    }
-
-    int det_bal () {
-        if (dr == nullptr && st==nullptr) return 0;
-        else if (dr == nullptr) return (st)->h;
-        else if (st == nullptr) return -(dr)->h;
-        else return (st->h - dr->h) ;
-    }
-
-    void copiere_rec (nod_avl a) {
-        bal=a.bal;
-        h=a.h;
-        nod<data>::info=a.info;
-        st=dr=nullptr;
-        if(a.st){
-            st=new nod_avl(*(a.st));
-            //st->copiere_rec(*(a.st));
-        }
-        if(a.dr){
-            dr=new nod_avl(*(a.dr));
-            //dr->copiere_rec(*(a.dr));
-        }
-        return;
-     }
-
-     void stergere_subarbore_rec() {
-        if (st) delete st;
-        if (dr) delete dr;
-        return;
-     }
-    void afisare_rec (ostream& o) {
-        o<<"("<<nod<data>::info<<",b"<<bal<<"), ";
-        if (st) {
-            st->afisare_rec(o);
-        }
-        if (dr) {
-            dr->afisare_rec(o);
-        }
-        return;
-     }
-
-    nod_avl& operator=(const nod_avl& n) {
-        nod<data>::operator=(n);
-        if (this != &n) {
-            stergere_subarbore_rec();
-            copiere_rec(n);
-        }
-        return (*this);
-    }
-};
 
 template <class data> void rotatie_stanga(nod_avl<data>** root) {
     cout<<"Rotatie stanga pe "<<(*root)->get()<<endl;
@@ -280,88 +144,6 @@ template <class data> void echilibreaza (nod_avl<data>** root) {
         }
 }
 
-
-//NOD_AVL.CPP
-
-//ARBORE>H
-
-template <class data, class nodt  >
-class arbore {
-    nodt * rad;
-    int nr_noduri;
-public:
-    friend class abc<data>;
-    friend class avl<data>;
-    arbore() {rad=nullptr; nr_noduri=0;}
-    arbore(data inf) {
-        rad=new nodt ;
-        rad->info=inf;
-        rad->st=rad->dr=nullptr;
-        nr_noduri=1;
-    }
-    arbore(const arbore& arb) {
-        cout<<"CC arbore."<<endl;
-        nr_noduri=arb.nr_noduri;
-        rad=nullptr;
-        if (arb.rad) {
-            rad=new nodt ;
-            rad->copiere_rec(*(arb.rad));
-        }
-    }
-    virtual ~arbore() {
-        cout<<"Destructor arbore."<<endl;
-        if (rad) {
-            delete rad;
-        }
-    }
-    virtual arbore& operator=(const arbore& arb) {
-        if (this!=(&arb)) {
-            nr_noduri=arb.nr_noduri;
-            if (rad) {
-                rad->stergere_subarbore_rec();
-                delete rad;
-            }
-            cout<<"Arborele de egalizat e: "<<*(arb.rad)<<endl;
-            if (arb.rad) {
-                rad=new nodt;
-                rad->copiere_rec(*(arb.rad));
-            }
-        }
-        return (*this);
-    }
-
-    void afisare (ostream& o) {
-        rad->afisare_rec(o);
-        return;
-    }
-
-    virtual void adauga (data inf) {
-        if (rad==nullptr) {
-            nr_noduri++;
-            rad=new nodt;
-            rad->info=inf;
-            rad->st=rad->dr=nullptr;
-            return;
-        }
-        nodt* t=rad;
-        while (t->st) {
-            t=t->st;
-        }
-        t->st=new nodt;
-        t=t->st;
-        t->info=inf;
-        t->st=t->dr=nullptr;
-        nr_noduri++;
-        cout<<"Adaug "<<inf<<" si obtin: "<<(*rad)<<endl;
-        return;
-    }
-
-    virtual arbore& operator+(data inf) {
-        adauga(inf);
-        return (*this);
-    }
-};
-
 template <class data, class nodt> ostream& operator<<(ostream& o, arbore<data, nodt>& arb) {
     arb.afisare(o);
     return o;
@@ -375,133 +157,27 @@ template <class data, class nodt> istream& operator>>(istream& i, arbore<data, n
 }
 
 
-//abc.h
 
-template <class data>
-class abc: public arbore <data, nod<data> > {
-public:
-    abc():arbore<data, nod<data> >() {};
-    abc(data inf):arbore<data, nod<data> >(inf) {};
-    abc(const abc<data>& arb):arbore<data, nod<data> >(arb) {};
-    ~abc() {
-        cout<<"Destructor arbore binar."<<endl;
-        arbore<data, nod<data> >::~arbore();
-    };
-    void adauga (data inf) {
-        if (arbore<data, nod<data> >::rad==nullptr) {
-            arbore<data, nod<data> >::rad=new nod<data>;
-            arbore<data, nod<data> >::rad->info=inf;
-            arbore<data, nod<data> >::rad->st=arbore<data, nod<data> >::rad->dr=nullptr;
-            return;
-        }
-        nod<data>* t=arbore<data, nod<data> >::rad;
-        while (1) {
-            if (t->info > inf) {
-                if (t->dr==nullptr) {
-                    t->dr=new nod<data>;
-                    t=t->dr;
-                    t->dr=t->st=nullptr;
-                    t->info=inf;
-                    return;
-                }
-                t=t->dr;
-            }
-            else if (t->info < inf) {
-                if (t->st==nullptr) {
-                    t->st=new nod<data>;
-                    t=t->st;
-                    t->st=t->dr=nullptr;
-                    t->info=inf;
-                    return;
-                }
-                t=t->st;
-            }
-        }
-    }
-    abc& operator+(data inf){
-        arbore<data, nod<data> >::operator+(inf);
-        return (*this);
-    }
-    abc& operator=(const abc& Acopiat) {
-        arbore<data, nod<data> >::operator=(Acopiat);
-        return (*this);
-    }
-};
-
-
-//avl.h
-
-template <class data>
-class avl:public arbore<data, nod_avl<data> > {
-    public:
-    avl():arbore<data, nod_avl<data> >() {};
-    avl(data inf):arbore<data, nod_avl<data> >(inf) {};
-    avl(const avl<data>& arb):arbore<data, nod_avl<data> >(arb) {};
-    ~avl() {
-        cout<<"Destructor avl."<<endl;
-        arbore<data, nod_avl<data> >::~arbore();
-    };
-
-    //friend void rotatie_stanga(nod_avl<data>** root);
-    //friend void rotatie_dreapta(nod_avl<data>** root);
-    friend void echilibreaza<data>(nod_avl<data>**);
-    friend void rotatie_stanga<data>(nod_avl<data>** root);
-    friend void rotatie_dreapta<data>(nod_avl<data>** root);
-    friend void rotatie_stanga_dreapta<data>(nod_avl<data>** root);
-    friend void rotatie_dreapta_stanga<data>(nod_avl<data>** root);
-    void avl_maker (nod_avl<data>** root, data inf) {
-        if ((*root)==NULL) {
-            (*root)=new nod_avl<data>;
-            (*root)->info=inf;
-            (*root)->st=(*root)->dr=nullptr;
-            (*root)->bal=0;
-            (*root)->h=1; /* !!!!!!!!!!!!!!!! */
-            return;
-        }
-        else if (inf < (*root)->info) {
-            avl_maker ( &((*root)->st) , inf );
-        }
-        else if (inf > (*root)->info) {
-            avl_maker ( &((*root)->dr) , inf );
-        }
-        (*root)->h = (*root)->det_h();
-        echilibreaza(root); //functiile de rotatie se vor ocupa si de o eventuala realocare a inaltimii
-        return;
-    }
-
-    void adauga (data inf) {
-        avl_maker(&(arbore<data, nod_avl<data> >::rad), inf);
-        return;
-    }
-
-    avl& operator+(data inf){
-        arbore<data, nod_avl<data> >::operator+(inf);
-        return (*this);
-    }
-    avl& operator=(const avl& Acopiat) {
-        arbore<data, nod_avl<data> >::operator=(Acopiat);
-        return (*this);
-    }
-};
 
 
 
 
 int main()
 {
-    // i1=3, i2=5;
+    int i1=3, i2=5;
     nod<int> n1(3), n2(5), n3(7);
     cout<<"n2>n1: "<<(n2>n1)<<endl;
     cout<<"n2==n1: "<<(n2==n1)<<endl;
     arbore <int, nod<int> > arb1(3), arb2(arb1);
     cout<<"arb1: "<<arb1<<endl;
     cout<<"arb2: "<<arb2<<endl;
-    arb2=arb2+11+12;
+    arb2=arb1+11+12;
     cout<<"arb2+11+12: "<<arb2<<endl;
     cout<<"(arb2+11+12)+13 adaugat in cout: "<<arb2+13<<endl;
-    cout<<"arb2 acum: "<<arb2<<endl;
+   cout<<"arb2 acum: "<<arb2<<endl;
     abc<int> arbin(7);
     arbin=arbin+3+256+23+12+1+5;
+
     cout<<"arbin: "<<arbin<<endl;
     avl<int> avl1(1);
     cout<<"avl: "<<avl1<<endl;
@@ -516,6 +192,34 @@ int main()
     cout<<"Introduceti in avl2: "<<endl;
     cin>>avl2;
     cout<<endl<<"avl2: "<<avl2<<endl;
+    //Demonstrarea virtualizarii:
+    ifstream fin("tema2.in");
+    int n;
+    fin>>n;
+    arbore<int, nod<int> >* arb_abc;
+    cout<<"Introduceti 1 pentru arbore si 2 pentru abc: "<<endl;
+    int opt1;
+    cin>>opt1;
+    if (opt1==1) {
+        arb_abc=new arbore<int, nod<int> >;
+        for (int i=0; i<n; i++) fin>>arb_abc;
+        cout<<arb_abc;
+    } else if (opt1==2) {
+        arb_abc=new abc<int>;
+        for (int i=0; i<n; i++) fin>>arb_abc;
+        cout<<arb_abc;
+    }
+    arbore<int, nod_avl<int> >* arb_avl;
+    cout<<"Introduceti 3 pentru arbore si 4 pentru avl: "<<endl;
+    cin>>opt1;
+    if (opt1==3) {
+        arb_avl=new arbore<int, nod<int> >;
+        for (int i=0; i<n; i++) fin>>arb_avl;
+        cout<<arb_avl;
+    } else if (opt1==4) {
+        arb_avl=new avl<int>;
+        for (int i=0; i<n; i++) fin>>arb_avl;
+    }
 
     return 0;
 }
